@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Project NOVA | Company Onboarding</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { background: #f5f7fa; }
+    .nova-card { border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
+    .section-title { font-weight: 600; margin-top: 30px; }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="nav nav-pills nav-justified bg-white p-3 shadow-sm">
+  <a class="nav-link active" href="#">Project NOVA</a>
+  <a class="nav-link" href="#">Dashboard</a>
+  <a class="nav-link" href="#">RFP Monitor</a>
+  <a class="nav-link disabled">Reports</a>
+</nav>
+
+<div class="container my-5">
+  <div class="card nova-card p-4">
+    <h3 class="text-center mb-4">🚀 Company Registration & NOVA Setup</h3>
+
+    <form id="novaForm">
+
+      <!-- COMPANY DETAILS -->
+      <h5 class="section-title">🏢 Company Information</h5>
+
+      <div class="mb-3">
+        <label class="form-label">Company Name</label>
+        <input type="text" class="form-control" required>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">GST Number</label>
+        <input type="text" class="form-control" placeholder="22AAAAA0000A1Z5" required>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Owner / Authorized Person Name</label>
+        <input type="text" class="form-control" required>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Sector</label>
+        <select class="form-select" required>
+          <option value="">Select Sector</option>
+          <option>FMCG</option>
+          <option>Wires & Cables</option>
+          <option>Infrastructure</option>
+          <option>Power & Energy</option>
+          <option>Manufacturing</option>
+        </select>
+      </div>
+
+      <!-- LOGIN DETAILS -->
+      <h5 class="section-title">🔐 Account Details</h5>
+
+      <div class="mb-3">
+        <label for="exampleInputEmail1" class="form-label">Company Email</label>
+        <input type="email" class="form-control" id="exampleInputEmail1" required>
+        <div class="form-text">Reports will be sent to this email.</div>
+      </div>
+
+      <div class="mb-3">
+        <label for="exampleInputPassword1" class="form-label">Password</label>
+        <input type="password" class="form-control" id="exampleInputPassword1" required>
+      </div>
+
+      <!-- NOVA CONFIG -->
+      <h5 class="section-title">🤖 Project NOVA Configuration</h5>
+
+      <div class="mb-3">
+        <label class="form-label">Number of Tender Websites to Monitor</label>
+        <input type="number" class="form-control" id="siteCount" min="1" max="10" value="1" onchange="generateUrlFields()">
+      </div>
+
+      <div id="urlContainer"></div>
+
+      <div class="mb-3">
+        <label class="form-label">Report Delivery Email (Gmail preferred)</label>
+        <input type="email" class="form-control" placeholder="company@gmail.com" required>
+      </div>
+
+      <div class="mb-3 form-check">
+        <input type="checkbox" class="form-check-input" required>
+        <label class="form-check-label">I authorize NOVA agents to scan public tender websites</label>
+      </div>
+
+      <button type="submit" class="btn btn-primary w-100">Activate Project NOVA</button>
+    </form>
+  </div>
+</div>
+
+<script>
+  function generateUrlFields() {
+    const count = document.getElementById('siteCount').value;
+    const container = document.getElementById('urlContainer');
+    container.innerHTML = '';
+
+    for (let i = 1; i <= count; i++) {
+      container.innerHTML += `
+        <div class="mb-3">
+          <label class="form-label">Tender Website URL ${i}</label>
+          <input type="url" class="form-control" placeholder="https://tender.gov.in" required>
+        </div>`;
+    }
+  }
+
+  generateUrlFields();
+
+  document.getElementById('novaForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    alert('✅ Project NOVA Activated! Agents will start scanning RFPs.');
+  });
+</script>
+
+</body>
+</html>

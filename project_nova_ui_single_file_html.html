@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Project NOVA — Tender Assistant Dashboard</title>
+  <style>
+    /* Minimal, modern styling */
+    :root{
+      --bg:#0f1724; --card:#0b1220; --muted:#9aa7bf; --accent:#6ee7b7; --danger:#ff7b7b; --glass: rgba(255,255,255,0.03);
+      --glass-2: rgba(255,255,255,0.02);
+      --glass-border: rgba(255,255,255,0.06);
+      --text:#e6eef8;
+    }
+    *{box-sizing:border-box}
+    body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial; margin:0;background:linear-gradient(180deg,#071029 0%, #071a2a 100%); color:var(--text);}
+    header{height:74px; display:flex; align-items:center; gap:18px; padding:0 22px; border-bottom:1px solid var(--glass-border); backdrop-filter: blur(6px);}
+    .brand{display:flex; gap:14px; align-items:center}
+    .logo{width:48px;height:48px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#3dd9ff);display:flex;align-items:center;justify-content:center;font-weight:700;color:#021018}
+    h1{font-size:16px;margin:0}
+    header .actions{margin-left:auto;display:flex;gap:10px;align-items:center}
+    button.primary{background:linear-gradient(90deg,#35d0b8,#00c7ff);border:none;padding:10px 14px;border-radius:10px;color:#012; font-weight:600;cursor:pointer}
+    button.ghost{background:transparent;border:1px solid var(--glass-border);padding:8px 10px;border-radius:8px;color:var(--muted);cursor:pointer}
+
+    .layout{display:grid; grid-template-columns:260px 1fr 420px; gap:18px; padding:20px}
+
+    /* Sidebar */
+    .sidebar{background:linear-gradient(180deg,var(--card), #071225); border-radius:12px; padding:18px; height:calc(100vh - 120px); border:1px solid var(--glass-border)}
+    .nav-item{padding:10px;border-radius:8px;display:flex;align-items:center;gap:10px;color:var(--muted);cursor:pointer}
+    .nav-item.active{background:var(--glass); color:var(--text)}
+
+    .section-title{font-size:12px;color:var(--muted); margin:14px 0 8px}
+
+    /* main */
+    .main{min-height:calc(100vh - 120px);}
+    .top-cards{display:flex;gap:12px;margin-bottom:12px}
+    .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border-radius:12px; padding:14px; border:1px solid var(--glass-border); flex:1}
+    .small{font-size:12px;color:var(--muted)}
+
+    /* RFP list */
+    .rfp-list{margin-top:12px}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:12px 10px;text-align:left;border-bottom:1px dashed var(--glass-border);font-size:13px}
+    th{color:var(--muted);font-weight:600}
+    tr:hover td{background:var(--glass-2)}
+    .status-pill{padding:6px 8px;border-radius:999px;font-weight:600;font-size:12px}
+    .st-open{background:rgba(110,231,183,0.12); color:var(--accent)}
+    .st-closed{background:rgba(255,123,123,0.08); color:var(--danger)}
+
+    /* right column */
+    .right-col{height:calc(100vh - 120px); overflow:auto; padding:14px; background:linear-gradient(180deg,#071529,#061018); border-radius:12px; border:1px solid var(--glass-border)}
+    .agent-card{display:flex;align-items:center;justify-content:space-between;padding:12px;border-radius:10px;background:var(--glass);margin-bottom:10px}
+    .agent-left{display:flex;gap:12px;align-items:center}
+    .agent-icon{width:42px;height:42px;border-radius:8px;background:#00181f;display:flex;align-items:center;justify-content:center}
+    .log-area{background:#021018;padding:10px;border-radius:8px;max-height:220px;overflow:auto;font-family:monospace;font-size:12px;color:var(--muted)}
+
+    /* modal */
+    .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(2,6,23,0.6)}
+    .modal.open{display:flex}
+    .modal-card{width:900px; max-width:95%; background:linear-gradient(180deg,#071224,#0b1724); padding:18px;border-radius:12px;border:1px solid var(--glass-border)}
+
+    /* responsive */
+    @media (max-width:1100px){.layout{grid-template-columns:1fr; grid-auto-rows:auto} .right-col{order:3;height:auto} .sidebar{height:auto}}
+
+    footer{padding:12px 22px;color:var(--muted);font-size:13px}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <div class="logo">NOVA</div>
+      <div>
+        <h1>Project NOVA</h1>
+        <div class="small">Neural Orchestrated Vendor Assistant — Tender automation</div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="ghost" id="btn-scan">Scan RFPs</button>
+      <button class="primary" id="btn-orchestrate">Run NOVA</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="small">Navigation</div>
+      <div class="nav-item active">Dashboard</div>
+      <div class="nav-item">RFP Library</div>
+      <div class="nav-item">Product Catalog</div>
+      <div class="nav-item">Pricing</div>
+      <div class="section-title">Agents</div>
+      <div class="nav-item">Sales Agent</div>
+      <div class="nav-item">Technical Agent</div>
+      <div class="nav-item">Pricing Agent</div>
+      <div style="height:20px"></div>
+      <div class="small">Demo Config</div>
+      <div style="margin-top:8px">
+        <label class="small">API Base URL</label>
+        <input id="baseUrl" placeholder="http://localhost:8000" style="width:100%; margin-top:6px;padding:8px;border-radius:8px;border:1px solid var(--glass-border);background:transparent;color:var(--text)" />
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="top-cards">
+        <div class="card">
+          <div class="small">RFPs found</div>
+          <div style="font-size:22px;font-weight:700;margin-top:6px" id="count-rfps">0</div>
+          <div class="small" style="margin-top:8px">Next deadline: <span id="next-deadline">—</span></div>
+        </div>
+
+        <div class="card">
+          <div class="small">Proposals ready</div>
+          <div style="font-size:22px;font-weight:700;margin-top:6px" id="count-proposals">0</div>
+          <div class="small" style="margin-top:8px">Last run: <span id="last-run">—</span></div>
+        </div>
+
+        <div class="card">
+          <div class="small">Active agents</div>
+          <div style="font-size:22px;font-weight:700;margin-top:6px">3</div>
+          <div class="small" style="margin-top:8px">Sales · Technical · Pricing</div>
+        </div>
+      </div>
+
+      <section class="card rfp-list">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;gap:12px;align-items:center">
+            <h3 style="margin:0">Open RFPs</h3>
+            <div class="small">(click an item to see details & run NOVA)</div>
+          </div>
+          <div>
+            <input id="search" placeholder="Search RFPs" style="padding:8px;border-radius:8px;border:1px solid var(--glass-border);background:transparent;color:var(--text)" />
+          </div>
+        </div>
+
+        <table id="rfp-table" style="margin-top:12px">
+          <thead>
+            <tr><th>RFP</th><th>Scope</th><th>Deadline</th><th>Status</th><th>Action</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </section>
+
+    </main>
+
+    <aside class="right-col">
+      <div style="margin-bottom:10px;font-size:14px;font-weight:700">Agents</div>
+      <div class="agent-card">
+        <div class="agent-left">
+          <div class="agent-icon">S</div>
+          <div>
+            <div style="font-weight:700">Sales Agent</div>
+            <div class="small">Scans tender websites & ingests RFPs</div>
+          </div>
+        </div>
+        <div>
+          <button class="ghost" onclick="runAgent('sales')">Run</button>
+        </div>
+      </div>
+
+      <div class="agent-card">
+        <div class="agent-left">
+          <div class="agent-icon">T</div>
+          <div>
+            <div style="font-weight:700">Technical Agent</div>
+            <div class="small">Matches RFP specs to product SKUs</div>
+          </div>
+        </div>
+        <div>
+          <button class="ghost" onclick="runAgent('technical')">Run</button>
+        </div>
+      </div>
+
+      <div class="agent-card">
+        <div class="agent-left">
+          <div class="agent-icon">P</div>
+          <div>
+            <div style="font-weight:700">Pricing Agent</div>
+            <div class="small">Estimates cost & test charges</div>
+          </div>
+        </div>
+        <div>
+          <button class="ghost" onclick="runAgent('pricing')">Run</button>
+        </div>
+      </div>
+
+      <div style="margin-top:14px;font-weight:700">Execution Log</div>
+      <div class="log-area" id="log"></div>
+
+      <div style="margin-top:14px">
+        <div class="small">Generated reports</div>
+        <ul id="reports" style="padding-left:18px;margin-top:8px"></ul>
+      </div>
+    </aside>
+  </div>
+
+  <div class="modal" id="modal">
+    <div class="modal-card">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h3 style="margin:0">RFP Response — Preview</h3>
+        <div><button class="ghost" onclick="closeModal()">Close</button></div>
+      </div>
+
+      <div id="report-content" style="margin-top:12px; max-height:60vh; overflow:auto; font-size:13px"></div>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px">
+        <button class="ghost" onclick="downloadReport()">Download PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>Project NOVA prototype · UI demo — edit and connect to agent endpoints via API Base URL</footer>
+
+<script>
+// ---------- Demo: replace baseUrl with real endpoint to integrate ----------
+let BASE_URL = '';
+const setBase = () => { const v = document.getElementById('baseUrl').value.trim(); BASE_URL = v; log('base url set to: '+(v||'[local-mock]')); }
+document.getElementById('baseUrl').addEventListener('change', setBase);
+
+// ---------- Mock data ----------
+let RFPS = [
+  {id:'RFP-2025-001', title:'Supply of 11kV XLPE 3-core cables', scope:'11kV XLPE 3-core, IS standard', deadline:'2025-12-15', status:'Open', details:'Quantity: 10,000 m. Tests: type test, routine test.'},
+  {id:'RFP-2025-002', title:'Metro Signalling cables - PVC 1.1kV', scope:'PVC 4-core 1.1kV, IS spec', deadline:'2025-11-30', status:'Open', details:'Quantity: 5,000 m. Tests: continuity, insulation.'},
+  {id:'RFP-2025-003', title:'Power Plant HT cables 33kV', scope:'33kV HT cable', deadline:'2026-01-10', status:'Open', details:'Quantity: 2,000 m. Tests: type, impulse.'}
+];
+
+let reports = [];
+
+function renderRfps(list = RFPS){
+  const tbody = document.querySelector('#rfp-table tbody'); tbody.innerHTML='';
+  list.forEach(r=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="width:36%"><strong>${r.title}</strong><div class="small" style="margin-top:6px;color:var(--muted)">${r.id}</div></td>
+      <td>${r.scope}</td>
+      <td>${r.deadline}</td>
+      <td><span class="status-pill ${r.status==='Open'?'st-open':'st-closed'}">${r.status}</span></td>
+      <td><button class="ghost" onclick="openRfp('${r.id}')">Open</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+  document.getElementById('count-rfps').textContent = list.length;
+}
+
+renderRfps();
+
+// ---------- search ----------
+document.getElementById('search').addEventListener('input', (e)=>{
+  const q = e.target.value.toLowerCase(); renderRfps(RFPS.filter(r=>r.title.toLowerCase().includes(q)||r.id.toLowerCase().includes(q)||r.scope.toLowerCase().includes(q)));
+});
+
+// ---------- logs & helpers ----------
+function log(msg){ const area = document.getElementById('log'); const time = new Date().toLocaleTimeString(); area.innerHTML = `<div>[${time}] ${escapeHtml(msg)}</div>`+area.innerHTML; }
+function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ---------- Open RFP panel & run NOVA for a single RFP ----------
+function openRfp(id){ const r = RFPS.find(x=>x.id===id); if(!r) return; const payload = { rfp_id: r.id, title: r.title, scope: r.scope, details: r.details, deadline: r.deadline };
+  // show dialog with details and Run button
+  document.getElementById('report-content').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-weight:700">${payload.title}</div>
+        <div class="small">${payload.rfp_id} · Deadline: ${payload.deadline}</div>
+      </div>
+      <div><button class="primary" onclick='startOrchestration(${JSON.stringify(payload).replaceAll("'","\\'")})'>Run NOVA for this RFP</button></div>
+    </div>
+
+    <hr style="border:none;border-top:1px dashed var(--glass-border);margin:12px 0" />
+    <div style="white-space:pre-wrap">${escapeHtml(payload.details)}</div>
+  `;
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal(){ document.getElementById('modal').classList.remove('open'); }
+
+// ---------- Orchestration: call agents (mock or real) ----------
+async function callAgent(agent, body){
+  // If BASE_URL present, call real agent endpoint (expected path convention)
+  try{
+    if(BASE_URL){
+      const url = `${BASE_URL}/${agent}`; // developer: map agent -> endpoint in integration
+      log('calling '+url);
+      const resp = await fetch(url, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+      if(!resp.ok) throw new Error('Agent HTTP '+resp.status);
+      return await resp.json();
+    } else {
+      // local mock responses with slight delay to simulate network
+      await new Promise(r=>setTimeout(r, 600 + Math.random()*600));
+      if(agent==='sales/scan' || agent==='sales') return { rfps: RFPS };
+      if(agent==='technical' || agent==='technical/match'){
+        const txt = body.details || body.text || '';
+        if(txt.toLowerCase().includes('11kv')) return { item_matches: [{sku:'XLPE_11KV',desc:'XLPE 3-core 11kV cable',match_pct:98}] };
+        if(txt.toLowerCase().includes('1.1kv')) return { item_matches: [{sku:'PVC_1KV',desc:'PVC 4-core 1.1kV cable',match_pct:87}] };
+        return { item_matches: [{sku:'UNKNOWN',desc:'No close match',match_pct:10}] };
+      }
+      if(agent==='pricing' || agent==='pricing/quote'){
+        // body: {sku, qty}
+        const pricing = { 'XLPE_11KV':1200, 'PVC_1KV':450, 'UNKNOWN':9999 };
+        const base = pricing[body.sku] || 0;
+        const test_cost = 5000; const gst = 0.18;
+        const total = ((base * (body.qty||1)) + test_cost) * (1+gst);
+        return { sku: body.sku, unit_price: base, test_cost, total: Math.round(total) };
+      }
+      return { ok:true };
+    }
+  }catch(err){ log('Agent '+agent+' failed: '+err.message); return { error: err.message } }
+}
+
+// run single agent by name
+async function runAgent(name){ log('Triggering agent: '+name); const res = await callAgent(name,{}); log('Agent '+name+' result -> '+JSON.stringify(res)); }
+
+// Orchestrate full flow for a selected RFP
+async function startOrchestration(payload){
+  const rfp = payload;
+  log('Orchestration start for '+rfp.rfp_id);
+  document.getElementById('last-run').textContent = new Date().toLocaleString();
+
+  // 1) Sales (discovery) - optional step when running for known RFP
+  const sales = await callAgent('sales', {query: rfp.title});
+  log('Sales found '+(sales.rfps? sales.rfps.length : '0')+' rfps');
+
+  // 2) Technical matching
+  const tech = await callAgent('technical/match', rfp);
+  log('Technical agent returned matches: '+JSON.stringify(tech.item_matches));
+
+  // pick best match
+  const best = (tech.item_matches && tech.item_matches[0]) || {sku:'UNKNOWN', desc:'No match', match_pct:0};
+
+  // 3) Pricing
+  const qty = 10000; // demo: assume qty
+  const pricing = await callAgent('pricing/quote', { sku: best.sku, qty });
+  log('Pricing calculated: '+JSON.stringify(pricing));
+
+  // 4) Master compile
+  const report = {
+    rfp_id: rfp.rfp_id, title: rfp.title, deadline: rfp.deadline,
+    selected_product: best, pricing
+  };
+
+  reports.unshift(report);
+  document.getElementById('count-proposals').textContent = reports.length;
+  const li = document.createElement('li'); li.innerHTML = `<a href='#' onclick='previewReport(${reports.length-1})'>${report.rfp_id} — ${report.selected_product.sku} — ₹${report.pricing.total}</a>`;
+  document.getElementById('reports').prepend(li);
+
+  // show result in modal (current preview)
+  document.getElementById('report-content').innerHTML = generateReportHtml(report);
+}
+
+function previewReport(index){ const r = reports[index]; if(!r) return; document.getElementById('report-content').innerHTML = generateReportHtml(r); document.getElementById('modal').classList.add('open'); }
+
+function generateReportHtml(r){
+  return `
+    <div style="display:flex;justify-content:space-between">
+      <div>
+        <div style="font-weight:700">${r.title}</div>
+        <div class="small">${r.rfp_id} · Deadline: ${r.deadline}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-weight:700;font-size:18px">₹${r.pricing.total}</div>
+        <div class="small">(incl. GST & tests)</div>
+      </div>
+    </div>
+    <hr style="border:none;border-top:1px dashed var(--glass-border);margin:12px 0" />
+    <div style="font-weight:700;margin-bottom:6px">Selected Product</div>
+    <div>${r.selected_product.sku} — ${r.selected_product.desc} — Spec Match: ${r.selected_product.match_pct}%</div>
+    <div style="margin-top:8px;font-weight:700">Pricing Breakdown</div>
+    <div>Unit Price: ₹${r.pricing.unit_price} | Test cost: ₹${r.pricing.test_cost} | Total: ₹${r.pricing.total}</div>
+  `;
+}
+
+// hook for scan all
+document.getElementById('btn-scan').addEventListener('click', async ()=>{
+  log('Scanning configured tender sites...');
+  const res = await callAgent('sales/scan', {});
+  log('Scan result: '+(res.rfps? res.rfps.length + ' rfps' : JSON.stringify(res)));
+});
+
+// master run
+document.getElementById('btn-orchestrate').addEventListener('click', ()=>{
+  // pick first open RFP
+  if(RFPS.length===0) return alert('No RFPs');
+  openRfp(RFPS[0].id);
+});
+
+// download stub
+function downloadReport(){ alert('This demo shows the preview. Integrate server-side PDF export for real download.'); }
+
+</script>
+</body>
+</html>
